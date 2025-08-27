@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -8,21 +7,27 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f4f7fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .dashboard-header { background: linear-gradient(135deg, #007bff, #00c6ff); color: white; padding: 40px 20px; text-align: center; border-radius: 0 0 20px 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        body { background-color: #121212; color: #f0f0f0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .dashboard-header { background: linear-gradient(135deg, #0d47a1, #1e88e5); color: #ffffff; padding: 40px 20px; text-align: center; border-radius: 0 0 20px 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
         .dashboard-header h1 { font-size: 2.5rem; margin-bottom: 10px; }
-        .section-title { color: #007bff; border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 20px; }
-        .company-card { border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.3s; }
+        .section-title { color: #90caf9; border-bottom: 2px solid #90caf9; padding-bottom: 10px; margin-bottom: 20px; }
+        .company-card { border-radius: 15px; background-color: #1e1e1e; border: 1px solid #424242; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: transform 0.3s; color: #f0f0f0; }
         .company-card:hover { transform: translateY(-5px); }
-        .company-card .card-header { background-color: #007bff; color: white; font-weight: bold; }
-        .company-card i { color: #007bff; margin-right: 8px; }
+        .company-card .card-header { background-color: #0d47a1; color: #ffffff; font-weight: bold; }
+        .company-card i { color: #90caf9; margin-right: 8px; }
         .rating-badge { font-size: 1.1rem; padding: 8px 12px; border-radius: 20px; }
-        .badge-buy { background-color: #28a745; }
-        .badge-strong-buy { background-color: #198754; }
-        .badge-hold { background-color: #ffc107; }
-        .table thead { background-color: #007bff; color: white; }
-        .table-striped tbody tr:nth-of-type(odd) { background-color: #e9f7ff; }
-        .footer { text-align: center; padding: 20px; color: #6c757d; font-size: 0.9rem; }
+        .badge-buy { background-color: #388e3c; }
+        .badge-strong-buy { background-color: #2e7d32; }
+        .badge-hold { background-color: #f57f17; }
+        .table { color: #f0f0f0; }
+        .table thead { background-color: #0d47a1; color: #ffffff; }
+        .table-striped tbody tr:nth-of-type(odd) { background-color: #212121; }
+        .table-striped tbody tr:nth-of-type(even) { background-color: #1e1e1e; }
+        .footer { text-align: center; padding: 20px; color: #bdbdbd; font-size: 0.9rem; }
+        .ranking-list .list-group-item { background-color: #1e1e1e; border-color: #424242; color: #f0f0f0; }
+        .ranking-list .list-group-item:hover { background-color: #292929; }
+        .card-body p { color: #f0f0f0; }
+        .card-body strong { color: #bbdefb; }
     </style>
 </head>
 <body>
@@ -30,6 +35,31 @@
         <div class="dashboard-header">
             <h1><i class="fas fa-chart-line"></i> Analyse Approfondie des Sociétés Immobilières Cotées Suisses</h1>
             <p>Premier Semestre 2025 - Perspective Buy-Side Senior</p>
+        </div>
+
+        <!-- Nouvelle Section: Classement par Taille -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <h2 class="section-title text-center"><i class="fas fa-sort-amount-down"></i> Classement des Sociétés par Taille (Market Cap)</h2>
+            </div>
+            <div class="col-12 mb-4">
+                <div class="card" style="background-color: #1e1e1e; border: 1px solid #424242;">
+                    <div class="card-body">
+                        <ul class="list-group ranking-list">
+                            <li class="list-group-item"><strong>1. Swiss Prime Site</strong> (~7700 MCHF)</li>
+                            <li class="list-group-item"><strong>2. PSP Swiss Property</strong> (~6700 MCHF)</li>
+                            <li class="list-group-item"><strong>3. Allreal</strong> (3075 MCHF)</li>
+                            <li class="list-group-item"><strong>4. Mobimo</strong> (~2350 MCHF)</li>
+                            <li class="list-group-item"><strong>5. Investis</strong> (1626 MCHF)</li>
+                            <li class="list-group-item"><strong>6. Intershop</strong> (~1300 MCHF)</li>
+                            <li class="list-group-item"><strong>7. Zug Estate</strong> (1107 MCHF)</li>
+                            <li class="list-group-item"><strong>8. Warteck Invest</strong> (625 MCHF)</li>
+                            <li class="list-group-item"><strong>9. SF Urban Properties</strong> (~500 MCHF)</li>
+                            <li class="list-group-item"><strong>10. Züblin</strong> (~110 MCHF)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Section 1: Synthèse par Société -->
@@ -167,7 +197,7 @@
                 <h2 class="section-title text-center"><i class="fas fa-balance-scale"></i> 2. Analyse Comparative</h2>
             </div>
             <div class="col-12 mb-4">
-                <div class="card">
+                <div class="card" style="background-color: #1e1e1e; border: 1px solid #424242;">
                     <div class="card-body">
                         <p><strong><i class="fas fa-chart-bar"></i> Benchmarking vs pairs :</strong> Leaders en cash-flow : PSP et Swiss Prime Site (FFO >2 CHF/action, marges EBITDA >85%). Intershop et Zug Estate excellent en ROE excl. reval. (>6%) grâce à vacants bas. Mobimo et Allreal forts en pipelines (>600 MCHF), mais LTV élevés (43-45%). Warteck et Investis solides en bilan (LTV <45%). SF Urban et Züblin offrent yields plus hauts (4-5%). Moyenne secteur : vacants 3-5%, like-for-like +1-2%, LTV 35-40%, ROE 5-7%.</p>
                         <p><strong><i class="fas fa-money-check-alt"></i> Multiples de valorisation :</strong> P/FFO moyen 15-20x (PSP ~18x, Swiss Prime ~16x; Züblin ~12x). Rendement dividende 3-4% (Intershop ~4%, Allreal ~3,5%). Prime/décote sur NAV : décote moyenne 10-20% (Warteck prime 21%, Zug décote 10%; SF Urban décote 15%). Favorise résidentiels purs vs. mixtes.</p>
