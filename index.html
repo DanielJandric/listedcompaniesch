@@ -1,548 +1,464 @@
+```html
 <!DOCTYPE html>
-<html lang="fr" class="scroll-smooth">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analyse Interactive - Immobilier Suisse S1 2025</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Warm Neutrals -->
-    <!-- Application Structure Plan: L'application est structurée en trois sections thématiques pour une exploration intuitive, rompant avec la structure linéaire du rapport. 1) Un aperçu du marché pour contextualiser. 2) Une section d'analyse comparative avec des graphiques interactifs (sélecteur de métriques, graphiques à barres et à bulles) pour faciliter le benchmarking visuel. 3) Une section de profils détaillés où l'utilisateur sélectionne une société via des boutons pour afficher dynamiquement ses informations complètes dans une zone de contenu unique. Cette architecture "tableau de bord" est choisie pour permettre à l'utilisateur de passer rapidement d'une vue d'ensemble à une analyse détaillée sans être submergé par l'information, favorisant ainsi la découverte et la comparaison active. -->
-    <!-- Visualization & Content Choices: 1) Comparaison LTV/Rendement: Objectif: Comparer la performance financière. Viz: Graphique à barres interactif (Chart.js) avec un sélecteur. Justification: Permet une comparaison directe et claire d'une métrique à la fois, l'interaction via le sélecteur enrichit l'analyse sans surcharger l'interface. 2) Valorisation vs Risque: Objectif: Analyser le positionnement sur le marché. Viz: Graphique à bulles (Chart.js) montrant Prime/Décote vs LTV, avec la capitalisation boursière comme taille de bulle. Justification: Visualise efficacement la relation entre trois variables clés, aidant à identifier les outliers et les profils de risque/valorisation. 3) Profils de société: Objectif: Présenter des informations denses de manière digeste. Méthode: Système d'onglets activé par JS. Justification: Sépare le contenu en blocs logiques (Synthèse, Finances, etc.), améliorant considérablement la lisibilité et l'expérience utilisateur par rapport à un long texte. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-        }
-    </script>
+    <title>Dashboard Analyse Immobilières Suisses - S1 2025</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8f9fa;
-        }
-        .dark body {
-            background-color: #0f172a;
-        }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 400px;
-            max-height: 50vh;
-        }
-        @media (max-width: 768px) {
-            .chart-container {
-                height: 350px;
-                max-height: 60vh;
-            }
-        }
-        .active-company-btn {
-            background-color: #1e3a8a !important;
-            color: white !important;
-            box-shadow: 0 4px 14px 0 rgb(0 0 0 / 10%);
-        }
-        .dark .active-company-btn {
-            background-color: #60a5fa !important;
-            color: #1e293b !important;
-        }
-        .section-title {
-            font-size: 2.25rem;
-            font-weight: 700;
-        }
-        .section-subtitle {
-            font-size: 1.125rem;
-        }
+        body { background-color: #f4f7fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .dashboard-header { background: linear-gradient(135deg, #007bff, #00c6ff); color: white; padding: 40px 20px; text-align: center; border-radius: 0 0 20px 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .dashboard-header h1 { font-size: 2.5rem; margin-bottom: 10px; }
+        .section-title { color: #007bff; border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 20px; }
+        .company-card { border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.3s; }
+        .company-card:hover { transform: translateY(-5px); }
+        .company-card .card-header { background-color: #007bff; color: white; font-weight: bold; }
+        .company-card i { color: #007bff; margin-right: 8px; }
+        .rating-badge { font-size: 1.1rem; padding: 8px 12px; border-radius: 20px; }
+        .badge-buy { background-color: #28a745; }
+        .badge-strong-buy { background-color: #198754; }
+        .badge-hold { background-color: #ffc107; }
+        .table thead { background-color: #007bff; color: white; }
+        .table-striped tbody tr:nth-of-type(odd) { background-color: #e9f7ff; }
+        .footer { text-align: center; padding: 20px; color: #6c757d; font-size: 0.9rem; }
     </style>
 </head>
-<body class="text-slate-800 dark:text-slate-200 transition-colors duration-300">
-
-    <header class="bg-white dark:bg-slate-800 shadow-sm sticky top-0 z-50">
-        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="text-2xl font-bold text-blue-900 dark:text-blue-400">
-                <span>ImmoSuisse</span><span class="text-blue-500">.analyse</span>
-            </div>
-            <div class="hidden md:flex items-center space-x-8">
-                <a href="#overview" class="text-gray-600 dark:text-gray-300 hover:text-blue-800 dark:hover:text-blue-400 transition">Aperçu</a>
-                <a href="#comparison" class="text-gray-600 dark:text-gray-300 hover:text-blue-800 dark:hover:text-blue-400 transition">Analyse Comparative</a>
-                <a href="#profiles" class="text-gray-600 dark:text-gray-300 hover:text-blue-800 dark:hover:text-blue-400 transition">Profils</a>
-            </div>
-            <button id="darkModeToggle" class="p-2 rounded-full bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300">
-                <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon hidden"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-            </button>
-        </nav>
-    </header>
-
-    <main class="container mx-auto px-6 py-12">
-
-        <section id="overview" class="mb-20">
-            <h1 class="text-4xl md:text-5xl font-bold text-center text-gray-800 dark:text-white mb-4">Analyse du Secteur Immobilier Suisse</h1>
-            <p class="text-xl text-center text-gray-500 dark:text-gray-400 mb-12">Performance S1 2025 et Perspectives d'Investissement</p>
-            
-            <div class="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-lg">
-                <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">Contexte et Thèmes Clés du Semestre</h2>
-                <p class="text-gray-600 dark:text-gray-300 mb-6">
-                    Le premier semestre 2025 a réaffirmé le statut de l'immobilier suisse comme valeur refuge, dynamisé par la baisse du taux directeur de la BNS. Cette décision a entraîné une compression des taux de capitalisation et des gains de réévaluation significatifs. L'analyse des résultats révèle une performance sectorielle robuste, portée par des fondamentaux solides et une gestion financière prudente.
-                </p>
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg">
-                        <h3 class="font-bold text-lg text-blue-900 dark:text-blue-300 mb-2">📈 Compression des Taux & Valorisations</h3>
-                        <p class="text-blue-800 dark:text-blue-400 text-sm">La baisse des taux d'escompte a mécaniquement augmenté la valeur des portefeuilles, un avantage notable mais qui accroît la sensibilité du secteur aux futures décisions de politique monétaire.</p>
-                    </div>
-                    <div class="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg">
-                        <h3 class="font-bold text-lg text-green-900 dark:text-green-300 mb-2">🏢 Résilience Opérationnelle</h3>
-                        <p class="text-green-800 dark:text-green-400 text-sm">Les fondamentaux restent excellents : taux de vacance historiquement bas et croissance des revenus locatifs à périmètre constant, témoignant d'une forte demande structurelle.</p>
-                    </div>
-                    <div class="bg-amber-50 dark:bg-amber-900/20 p-6 rounded-lg">
-                        <h3 class="font-bold text-lg text-amber-900 dark:text-amber-300 mb-2">🏗️ Le Développement comme Moteur</h3>
-                        <p class="text-amber-800 dark:text-amber-400 text-sm">Face à la rareté des actifs prime, les pipelines de développement internes sont le principal levier de création de valeur future pour la croissance des cash-flows et des NAV.</p>
-                    </div>
-                    <div class="bg-slate-100 dark:bg-slate-700/50 p-6 rounded-lg">
-                        <h3 class="font-bold text-lg text-slate-900 dark:text-slate-200 mb-2">🛡️ Bilans Solides & Discipline</h3>
-                        <p class="text-slate-800 dark:text-slate-300 text-sm">Le secteur se distingue par une gestion financière conservatrice, avec des ratios d'endettement (LTV) maîtrisés qui offrent une grande flexibilité stratégique.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <hr class="my-16 border-gray-200 dark:border-slate-700">
-
-        <section id="comparison" class="mb-20">
-            <h2 class="section-title text-gray-800 dark:text-white text-center">Analyse Comparative Interactive</h2>
-            <p class="section-subtitle text-gray-500 dark:text-gray-400">
-                Visualisez et comparez les métriques financières et de valorisation clés des différentes sociétés. Utilisez les filtres pour adapter les graphiques à votre analyse et identifier les tendances et les outliers du secteur.
-            </p>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold text-gray-800 dark:text-white">Performance & Levier Financier</h3>
-                        <select id="metricSelector" class="border border-gray-300 dark:border-slate-600 rounded-md px-3 py-1 text-sm bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="ltv" selected>LTV (%)</option>
-                            <option value="yield">Rendement (%)</option>
-                            <option value="premiumDiscount">Prime/Décote (%)</option>
-                        </select>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="comparisonChart"></canvas>
-                    </div>
-                </div>
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Valorisation vs. Risque (LTV)</h3>
-                     <div class="chart-container">
-                        <canvas id="bubbleChart"></canvas>
-                    </div>
-                </div>
-                 <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Distribution de la Capitalisation Boursière</h3>
-                     <div class="chart-container">
-                        <canvas id="marketCapDonutChart"></canvas>
-                    </div>
-                </div>
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold text-gray-800 dark:text-white">Profil de Performance Radar</h3>
-                        <select id="radarCompanySelector" class="border border-gray-300 dark:border-slate-600 rounded-md px-3 py-1 text-sm bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        </select>
-                    </div>
-                     <div class="chart-container">
-                        <canvas id="companyRadarChart"></canvas>
-                    </div>
-                </div>
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">FFO vs. Dividende par Action</h3>
-                     <div class="chart-container">
-                        <canvas id="payoutScatterChart"></canvas>
-                    </div>
-                </div>
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg">
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Croissance des Revenus S1 (vs S1-24)</h3>
-                     <div class="chart-container">
-                        <canvas id="revenueGrowthChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <hr class="my-16 border-gray-200 dark:border-slate-700">
-
-        <section id="profiles">
-            <h2 class="section-title text-gray-800 dark:text-white">Profils Détaillés des Sociétés</h2>
-            <p class="section-subtitle text-gray-500 dark:text-gray-400">
-                Sélectionnez une société pour accéder à une analyse approfondie de sa performance semestrielle, de sa situation financière et de nos recommandations d'investissement. Chaque profil détaille les catalyseurs et les risques associés.
-            </p>
-            <div id="companySelector" class="flex flex-wrap justify-center gap-3 mb-8">
-            </div>
-
-            <div id="companyDetailsContainer" class="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-lg min-h-[500px]">
-            </div>
-        </section>
-
-    </main>
-    
-    <footer class="bg-white dark:bg-slate-800 mt-20 border-t border-gray-200 dark:border-slate-700">
-        <div class="container mx-auto px-6 py-6 text-center text-gray-500 dark:text-gray-400">
-            <p>&copy; 2025 ImmoSuisse.analyse. Données basées sur les rapports semestriels S1 2025.</p>
+<body>
+    <div class="container-fluid">
+        <div class="dashboard-header">
+            <h1><i class="fas fa-chart-line"></i> Analyse Approfondie des Sociétés Immobilières Cotées Suisses</h1>
+            <p>Premier Semestre 2025 - Perspective Buy-Side Senior</p>
         </div>
-    </footer>
 
-<script>
-const companiesData = [
-    {
-        id: 'spsn', name: 'Swiss Prime Site', marketCap: 9200, revenueS1: 276.3, ffoPerShare: 4.20, dividend: 3.45, ltv: 38.4, yield: 2.9, navPerShare: 98.01, premiumDiscount: 21.2, rating: 'Strong Buy', target: 135.00, revenueGrowth: 2.2,
-        summary: `Le S1 2025 marque un tournant avec la finalisation de la transformation en groupe purement immobilier. Une augmentation de capital réussie de CHF 300M a permis de financer la croissance. Le FFO par action reste résilient à CHF 2.10 malgré une baisse temporaire des revenus locatifs due aux grands projets de redéveloppement.`,
-        performance: `Les revenus locatifs (CHF 225.5M) sont impactés par les projets majeurs comme "Destination Jelmoli", mais la croissance à périmètre constant reste positive à +2.2%. Le taux de vacance augmente légèrement à 4.0%, reflétant les surfaces en redéveloppement. Le pipeline de développement est un atout majeur pour la croissance future.`,
-        financials: `L'EBITDA hors réévaluations s'établit à CHF 199.5M. Le FFO I par action atteint CHF 2.10, en hausse. Le bilan est robuste avec un LTV de 38.4% et un coût de la dette très bas à 1.0%. Le portefeuille est évalué à CHF 13.31 milliards, avec des gains de réévaluation de CHF 102.0M. L'EPRA NTA par action est de CHF 98.01.`,
-        recommendation: `SPS est à un point d'inflexion. La phase d'investissement intense pèse temporairement sur les revenus mais créera une valeur significative à moyen terme. Le marché ne valorise pas pleinement la croissance future sécurisée dans le pipeline. L'action offre un point d'entrée attractif avant la matérialisation de la croissance des revenus dès 2026. Catalyseurs: Avancement des projets, acquisitions relutives. Risques: Retards sur les projets, hausse des taux.`
-    },
-    {
-        id: 'pspn', name: 'PSP Swiss Property', marketCap: 6160, revenueS1: 173.9, ffoPerShare: 4.66, dividend: 3.90, ltv: 35.2, yield: 2.9, navPerShare: 143.60, premiumDiscount: -6.3, rating: 'Buy', target: 150.00, revenueGrowth: 1.2,
-        summary: `PSP a délivré une performance opérationnelle solide avec un EBITDA de CHF 148.8M et une marge élevée. Le résultat net a été fortement influencé par des gains de réévaluation de CHF 113.4M. Le taux de vacance a connu une hausse conjoncturelle à 4.0%, mais la direction est confiante pour le réduire d'ici la fin de l'année.`,
-        performance: `Les revenus locatifs s'établissent à CHF 173.9M. La croissance à périmètre constant est positive à +1.2%. Le taux de vacance est à 4.0%. La société poursuit activement la modernisation de son portefeuille avec des projets de rénovation majeurs à Berne, Lausanne, Bâle et Genève.`,
-        financials: `La marge EBITDA est élevée et stable à 85.1%. Le bilan reste très solide avec un LTV de 35.2% et un coût de la dette maîtrisé à 1.04%. La valeur du portefeuille s'élève à CHF 9.98 milliards. L'EPRA NRV par action est de CHF 143.60.`,
-        recommendation: `PSP représente l'investissement de qualité par excellence. Son portefeuille est inégalé et son bilan est une forteresse. La hausse temporaire de la vacance a créé une opportunité. La valorisation, bien que rarement bon marché, est justifiée par la visibilité et la faible volatilité des cash-flows. Catalyseurs: Réduction rapide de la vacance. Risques: Dégradation du marché locatif de bureaux à Genève.`
-    },
-    {
-        id: 'alln', name: 'Allreal Holding', marketCap: 3010, revenueS1: 103.5, ffoPerShare: 7.58, dividend: 7.00, ltv: 47.5, yield: 3.8, navPerShare: 160.03, premiumDiscount: 14.0, rating: 'Hold', target: 185.00, revenueGrowth: -6.8,
-        summary: `Performance robuste au S1 2025, avec un bénéfice net en forte hausse à CHF 116.8M. Le segment Développement & Réalisation a été un contributeur majeur, compensant une baisse temporaire des revenus locatifs due à des cessions et des rénovations.`,
-        performance: `Les revenus locatifs ont diminué de 6.8% à CHF 103.5M. Le taux de vacance a augmenté à 2.9%. Le pipeline de développement reste un pilier stratégique, avec un volume d'investissement estimé à CHF 1.83 milliard (projets et réserves).`,
-        financials: `Le bénéfice net hors réévaluation a augmenté de 3.5% à CHF 62.6M. Le portefeuille est valorisé à CHF 5.20 milliards, avec des gains de réévaluation de CHF 70.3M. Le NAV par action est de CHF 160.03.`,
-        recommendation: `Le modèle intégré d'Allreal a prouvé son efficacité. Cependant, la hausse de la vacance et la baisse des revenus locatifs nécessitent une surveillance. La valorisation actuelle semble correctement refléter le profil risque/rendement équilibré. Catalyseurs: Accélération des ventes de copropriétés. Risques: Ralentissement du marché de la promotion.`
-    },
-    {
-        id: 'mobn', name: 'Mobimo Holding', marketCap: 2300, revenueS1: 62.5, ffoPerShare: 16.46, dividend: 10.25, ltv: 43.2, yield: 3.2, navPerShare: 297.39, premiumDiscount: 7.1, rating: 'Buy', target: 350.00, revenueGrowth: 2.0,
-        summary: `Premier semestre très performant, marqué par une forte contribution du segment Développement (CHF 24.6M). Le bénéfice net a bondi à CHF 109.7M, propulsé par un gain de réévaluation de CHF 71.6M. L'acquisition stratégique d'EMWE Holding AG renforce le pipeline.`,
-        performance: `Les revenus locatifs sont stables à CHF 62.5M, avec une croissance like-for-like de +2.0%. Le taux de vacance est maîtrisé à 3.9%. L'acquisition d'EMWE (portefeuille de CHF 185M) est une opération majeure.`,
-        financials: `L'EBIT hors réévaluations a connu une croissance de 19.0% à CHF 73.0M. Le LTV s'établit à 43.2%. Le portefeuille atteint CHF 3.92 milliards. L'EPRA NTA par action est de CHF 297.39.`,
-        recommendation: `Mobimo a démontré sa capacité à créer de la valeur via le développement. L'acquisition d'EMWE est transformatrice. Bien que le levier soit légèrement plus élevé, la société se négocie avec une décote par rapport à son NTA, ce qui ne semble pas refléter pleinement le potentiel de croissance. Catalyseurs: Intégration réussie d'EMWE. Risques: Levier financier plus élevé.`
-    },
-    {
-        id: 'isn', name: 'Intershop Holding', marketCap: 1420, revenueS1: 44.3, ffoPerShare: 6.22, dividend: 5.50, ltv: 33.0, yield: 3.6, navPerShare: 115.01, premiumDiscount: 33.0, rating: 'Buy', target: 170.00, revenueGrowth: 8.1,
-        summary: `S1 2025 caractérisé par une forte croissance des revenus locatifs et des gains de réévaluation exceptionnels de CHF 200.2M. Le bénéfice net a atteint CHF 175.9M. La société a simplifié sa structure pour améliorer son efficacité.`,
-        performance: `Les revenus locatifs ont connu une croissance robuste de 8.1% à CHF 44.3M. Le taux de vacance a continué de baisser à 7.9%. Le pipeline de développement est substantiel, avec un volume projeté de plus de CHF 525M.`,
-        financials: `Le bilan est très sain, avec un LTV de seulement 33.0%. Le portefeuille a grimpé à CHF 1.83 milliard. Le NAV par action a atteint CHF 115.01.`,
-        recommendation: `Intershop a réalisé un semestre exceptionnel, renforçant un bilan déjà très solide. La croissance opérationnelle est également au rendez-vous. La valorisation actuelle ne reflète pas encore pleinement le succès attendu des projets en cours. Catalyseurs: Succès de commercialisation des projets clés. Risques: Normalisation des gains de réévaluation.`
-    },
-    {
-        id: 'zugn', name: 'Zug Estates', marketCap: 1090, revenueS1: 35.9, ffoPerShare: 78.00, dividend: 47.00, ltv: 35.3, yield: 2.2, navPerShare: 2193.00, premiumDiscount: -2.4, rating: 'Hold', target: 2200.00, revenueGrowth: 6.0,
-        summary: `Excellent résultat opérationnel, caractérisé par une croissance des revenus locatifs et un taux de vacance exceptionnellement bas (0.9%). Le bénéfice net a plus que doublé à CHF 63.9M, grâce à un gain de réévaluation de CHF 50.1M.`,
-        performance: `Les revenus locatifs ont augmenté de 6.0% à CHF 35.9M. Le taux de vacance de 0.9% est l'un des plus bas du marché. Le projet majeur "Metalli Living Space" progresse.`,
-        financials: `Le bénéfice net hors réévaluations a progressé de 10.1% à CHF 19.9M. La structure financière est très conservatrice (ratio de fonds propres de 56.4%). Le portefeuille atteint CHF 1.92 milliard. NAV par action (série B) de CHF 2'193.0.`,
-        recommendation: `Une société de très haute qualité avec un portefeuille exceptionnel. Cependant, ces qualités sont largement reconnues par le marché, et l'action se négocie avec une prime. Le potentiel de hausse semble plus limité. Catalyseurs: Avancement du projet "Metalli". Risques: Forte concentration géographique sur Zoug.`
-    },
-    {
-        id: 'warn', name: 'Warteck Invest', marketCap: 617, revenueS1: 22.3, ffoPerShare: 83.40, dividend: 70.00, ltv: 45.1, yield: 3.5, navPerShare: 1667.00, premiumDiscount: 19.9, rating: 'Hold', target: 2050.00, revenueGrowth: 2.1,
-        summary: `Très bon premier semestre 2025, avec un bénéfice net de CHF 19.8M, en forte hausse. Le portefeuille a bénéficié d'une réévaluation positive et le permis de construire a été obtenu pour le projet "Tiglio".`,
-        performance: `Les revenus locatifs ont augmenté de 2.1% à CHF 22.3M. Le taux de vacance est resté très bas à 2.4%. Le pipeline de développement est bien fourni avec 17 projets (volume de CHF 225M).`,
-        financials: `Le LTV s'inscrit à 45.1%. La valeur du portefeuille a atteint CHF 1.05 milliard. Le NAV par action est de CHF 1'667.`,
-        recommendation: `Warteck Invest offre un profil de risque/rendement équilibré. La performance du S1 a été bonne. Cependant, avec un LTV de 45.1% et une valorisation qui n'offre pas de décote significative, le potentiel de surperformance semble limité. Catalyseurs: Accélération du pipeline. Risques: Liquidité du titre plus faible.`
-    },
-    {
-        id: 'sfpn', name: 'SF Urban Properties', marketCap: 266, revenueS1: 15.9, ffoPerShare: 4.34, dividend: 3.65, ltv: null, yield: 3.7, navPerShare: null, premiumDiscount: null, rating: 'Hold', target: 105.00, revenueGrowth: 2.3,
-        summary: `Premier semestre solide, en ligne avec les prévisions. Le bénéfice net hors réévaluations a connu une croissance notable de 14.0%. La société a poursuivi l'optimisation de son portefeuille avec des cessions et une acquisition ciblée à Zurich.`,
-        performance: `Les revenus immobiliers ont augmenté de 2.3% à CHF 15.9M. Le taux de vacance est stable à 2.0%. La société gère 6 projets de développement et 3 projets de construction.`,
-        financials: `L'EBIT hors réévaluations s'est élevé à CHF 11.4M. Le bénéfice net hors réévaluations a atteint CHF 7.3M (+14.0%). Le portefeuille est évalué à CHF 800.7M.`,
-        recommendation: `SF Urban Properties exécute bien sa stratégie de niche. La gestion active du portefeuille est un point positif. La valorisation actuelle semble juste au vu de sa taille et de son profil de croissance. Catalyseurs: Succès de la stratégie de rotation du portefeuille. Risques: Liquidité du titre.`
-    },
-    {
-        id: 'zubn', name: 'Züblin Immobilien', marketCap: 162, revenueS1: 9.4, ffoPerShare: 2.58, dividend: 1.00, ltv: 31.0, yield: 2.1, navPerShare: 45.61, premiumDiscount: 5.7, rating: 'Hold', target: 50.00, revenueGrowth: 4.3,
-        summary: `Clôture de l'exercice 2024/25 sur une note très positive, avec une augmentation du revenu locatif net. Le bénéfice net a bondi à CHF 8.7M, grâce à des réévaluations positives et une baisse des charges financières.`,
-        performance: `Les revenus locatifs ont progressé de 4.3% à CHF 9.4M. Succès majeur avec la réduction de moitié du taux de vacance EPRA, passé de 9.3% à 4.8%.`,
-        financials: `Le bilan est particulièrement sain, avec un LTV très bas de 31.0%. Le portefeuille a été évalué à CHF 235.6M. L'EPRA NTA par action s'est établi à CHF 45.61.`,
-        recommendation: `Züblin possède un bilan exceptionnellement solide et a réalisé des progrès opérationnels impressionnants. Cependant, la société est pénalisée par sa petite taille et une très faible liquidité. Sans catalyseur clair, il est peu probable que l'action surperforme. Catalyseurs: Acquisition relutive. Risques: Très faible liquidité du titre.`
-    },
-    {
-        id: 'iren', name: 'Investis Holding', marketCap: 1626, revenueS1: 38.8, ffoPerShare: 2.80, dividend: 2.60, ltv: 30.1, yield: 3.8, navPerShare: 108.56, premiumDiscount: 17.0, rating: 'Hold', target: 130.00, revenueGrowth: 37.7,
-        summary: `Investis a enregistré des résultats solides au S1 2025, avec une augmentation de 38% des revenus locatifs, soutenue par des acquisitions ciblées. Le bénéfice net s'élève à CHF 80.2M, fortement influencé par une réévaluation positive du portefeuille de CHF 70.5M. La société maintient une structure financière très solide.`,
-        performance: `La croissance des revenus locatifs à périmètre constant est de +1.9%. Le taux de vacance reste très bas à 1.4%. La société a poursuivi son expansion stratégique avec l'acquisition de trois propriétés pour CHF 58M, renforçant sa position sur le marché résidentiel de la région lémanique.`,
-        financials: `L'EBITDA avant réévaluations s'élève à CHF 24.4M. Le LTV est très bas à 30.1%, offrant une grande flexibilité financière. Le portefeuille immobilier totalise CHF 2.12 milliards. Le NAV par action a augmenté pour atteindre CHF 108.56.`,
-        recommendation: `Investis présente un profil défensif attractif avec un portefeuille résidentiel de haute qualité et un bilan très solide. La croissance est principalement tirée par des acquisitions sélectives. La valorisation actuelle, avec une prime sur le NAV, semble juste et reflète la qualité et la stabilité des actifs. Catalyseurs: Poursuite d'acquisitions relutives. Risques: Concentration géographique sur la région lémanique.`
-    }
-];
-
-let chartInstances = {};
-const darkModeKey = 'darkModeEnabled';
-
-document.addEventListener('DOMContentLoaded', () => {
-    initializeDarkMode();
-    populateCompanySelector();
-    populateRadarSelector();
-    initCharts();
-    setupEventListeners();
-    showCompanyDetails(companiesData[0].id);
-});
-
-function initializeDarkMode() {
-    if (localStorage.getItem(darkModeKey) === 'true') {
-        document.documentElement.classList.add('dark');
-        document.getElementById('sunIcon').classList.add('hidden');
-        document.getElementById('moonIcon').classList.remove('hidden');
-    } else {
-        document.getElementById('sunIcon').classList.remove('hidden');
-        document.getElementById('moonIcon').classList.add('hidden');
-    }
-}
-
-function setupEventListeners() {
-    document.getElementById('metricSelector').addEventListener('change', (event) => {
-        updateComparisonChart(event.target.value);
-    });
-    document.getElementById('radarCompanySelector').addEventListener('change', (event) => {
-        updateCompanyRadarChart(event.target.value);
-    });
-    document.getElementById('darkModeToggle').addEventListener('click', () => {
-        const isDark = document.documentElement.classList.toggle('dark');
-        localStorage.setItem(darkModeKey, isDark);
-        document.getElementById('sunIcon').classList.toggle('hidden');
-        document.getElementById('moonIcon').classList.toggle('hidden');
-        Object.values(chartInstances).forEach(chart => chart.destroy());
-        initCharts();
-    });
-}
-
-function getChartColors() {
-    const isDark = document.documentElement.classList.contains('dark');
-    return {
-        grid: isDark ? 'rgba(255, 255, 255, 0.1)' : '#e5e7eb',
-        ticks: isDark ? '#9ca3af' : '#4b5563',
-        labels: isDark ? '#d1d5db' : '#111827',
-        tooltipBg: isDark ? '#1f2937' : '#111827',
-        tooltipText: '#ffffff'
-    };
-}
-
-function populateCompanySelector() {
-    const selectorContainer = document.getElementById('companySelector');
-    companiesData.forEach(company => {
-        const button = document.createElement('button');
-        button.textContent = company.name;
-        button.dataset.companyId = company.id;
-        button.className = 'company-btn px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md hover:bg-gray-50 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition';
-        button.addEventListener('click', () => showCompanyDetails(company.id));
-        selectorContainer.appendChild(button);
-    });
-}
-
-function populateRadarSelector() {
-    const selector = document.getElementById('radarCompanySelector');
-    companiesData.forEach(company => {
-        const option = document.createElement('option');
-        option.value = company.id;
-        option.textContent = company.name;
-        selector.appendChild(option);
-    });
-}
-
-
-function getRatingColor(rating) {
-    switch (rating) {
-        case 'Strong Buy': return 'bg-green-600';
-        case 'Buy': return 'bg-green-500';
-        case 'Hold': return 'bg-yellow-500';
-        default: return 'bg-gray-500';
-    }
-}
-
-function showCompanyDetails(companyId) {
-    const company = companiesData.find(c => c.id === companyId);
-    if (!company) return;
-
-    const container = document.getElementById('companyDetailsContainer');
-    container.innerHTML = `
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-            <div>
-                <h3 class="text-3xl font-bold text-gray-800 dark:text-white">${company.name}</h3>
-                <p class="text-gray-500 dark:text-gray-400">Objectif de cours 12 mois: <span class="font-semibold text-gray-700 dark:text-gray-200">${company.target.toFixed(2)} CHF</span></p>
+        <!-- Section 1: Synthèse par Société -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <h2 class="section-title text-center"><i class="fas fa-building"></i> 1. Synthèse par Société</h2>
             </div>
-            <div class="mt-4 md:mt-0 flex items-center gap-2 text-lg font-bold text-white px-4 py-2 rounded-lg ${getRatingColor(company.rating)}">
-                <span>${company.rating}</span>
+        </div>
+        <div class="row">
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-info-circle"></i> Warteck Invest</div>
+                    <div class="card-body">
+                        <p><strong>Résumé exécutif :</strong> Forte croissance avec bénéfice net +146,7% à 19,8 MCHF, porté par revalorisations positives et gestion active. Focus sur diversification et pipeline.</p>
+                        <p><strong>Performance opérationnelle :</strong> Taux occupation 97,6% (vacants 2,4%); revenus locatifs nets 22,3 MCHF (+2,1%); pipeline 17 projets dont 4 développements d'aires; cessions mineures.</p>
+                        <p><strong>Métriques financières :</strong> Revenus 22,3 MCHF; EBITDA 25,9 MCHF (+90,6%); résultat net 19,8 MCHF; LTV 45,1%; gearing net 88,5%.</p>
+                        <p><strong>Évolution patrimoine :</strong> Valorisation 1 050,8 MCHF (+2,4%); rendement brut 4,4%, net 3,7%; NAV implicite via capitalisation 1,21x equity.</p>
+                        <p><strong>Guidance :</strong> Croissance contrôlée via pipeline; dividendes stables; emphase sur durabilité.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-info-circle"></i> Zug Estate</div>
+                    <div class="card-body">
+                        <p><strong>Résumé exécutif :</strong> Performance exceptionnelle, bénéfice net +127,1% à 63,9 MCHF grâce à revalorisations (50,1 MCHF) et croissance revenus; amélioration hôtelier.</p>
+                        <p><strong>Performance opérationnelle :</strong> Taux occupation 99,1% (vacants 0,9%); revenus locatifs 35,9 MCHF (+6,0%); pipeline projets construction 28,6 MCHF; optimisation interne.</p>
+                        <p><strong>Métriques financières :</strong> Revenus totaux 45,3 MCHF (+4,5%); EBITDA 29,6 MCHF (+7,5%); FFO implicite 19,9 MCHF (+10,1%); LTV 35,3%; coût dette 1,6%.</p>
+                        <p><strong>Évolution patrimoine :</strong> Valorisation 1 920,9 MCHF (+3,3%); rendement brut 4,0%; EPRA NTA 2 193,0 CHF/action (+6,7%); WAULT 5,7 ans.</p>
+                        <p><strong>Guidance :</strong> Croissance revenus locatifs; focus vacants bas et diversification hôtelière; potentiel indexation loyers.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-info-circle"></i> Mobimo</div>
+                    <div class="card-body">
+                        <p><strong>Résumé exécutif :</strong> Bénéfice net +67,3% à 109,7 MCHF, porté par revalorisations (71,6 MCHF) et développements (24,6 MCHF); loyers stables malgré vacants.</p>
+                        <p><strong>Performance opérationnelle :</strong> Taux occupation 96,1% (vacants 3,9%); revenus locatifs 62,5 MCHF (stable); pipeline développements 656 MCHF (+8,4%); ventes promotionnelles.</p>
+                        <p><strong>Métriques financières :</strong> EBITDA 144,5 MCHF (+73,6%); EPRA earnings 35,7 MCHF (-6,1%); résultat net 109,7 MCHF; LTV EPRA 43,2%; coût dette 1,33%.</p>
+                        <p><strong>Évolution patrimoine :</strong> Valorisation 3 919,4 MCHF (+3,2%); rendement brut 4,4%, EPRA NIY 3,5%; EPRA NTA 297,39 CHF/action (+5,7%).</p>
+                        <p><strong>Guidance :</strong> EPRA like-for-like +2,0%; cible LTV stable; focus ajustements DCF pour marché.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-info-circle"></i> Allreal</div>
+                    <div class="card-body">
+                        <p><strong>Résumé exécutif :</strong> Bénéfice net +73,8% à 116,8 MCHF grâce à revalorisations et croissance projets (+6,6%); focus réalisation tierce.</p>
+                        <p><strong>Performance opérationnelle :</strong> Revenus locatifs 103,5 MCHF (-6,8% ajusté); volumes complétés 126,3 MCHF; marge brute tierce 11,9%.</p>
+                        <p><strong>Métriques financières :</strong> Revenus totaux 229,8 MCHF (+0,1%); EBITDA excl. reval. 95,2 MCHF (+3,9%); EPS excl. reval. 3,79 CHF; coût dette 1,16%.</p>
+                        <p><strong>Évolution patrimoine :</strong> Valorisation 5 204,2 MCHF (+0,4%); rendement ~3-4%; NAV avant taxes 186,94 CHF/action (+0,7%).</p>
+                        <p><strong>Guidance :</strong> Maintien marge brute; croissance via pipeline; ROE excl. reval. +0,2% à 5,9%.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-info-circle"></i> Intershop</div>
+                    <div class="card-body">
+                        <p><strong>Résumé exécutif :</strong> Bénéfice net +234% à 175,9 MCHF boosté par revalorisations (200,2 MCHF) et gains cessions (2,6 MCHF); efficience opérationnelle.</p>
+                        <p><strong>Performance opérationnelle :</strong> Taux occupation 92,1% (vacants 7,9% -18 bp); revenus nets 39,5 MCHF (+7,4%); pipeline 16 développements/promotions.</p>
+                        <p><strong>Métriques financières :</strong> EBITDA avant reval. 36,0 MCHF; ROE excl. reval. 6,0%; résultat net 175,9 MCHF; LTV 33,0%; coût dette 1,25% (-15 bp).</p>
+                        <p><strong>Évolution patrimoine :</strong> Valorisation 1 826,1 MCHF (+14,7%); rendement brut 5,2%, net 4,6%; NAV 115,01 CHF/action (+3,9%).</p>
+                        <p><strong>Guidance :</strong> Croissance loyers nets +8%; gains cessions >15 MCHF; focus Zurich et mesures efficience.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-info-circle"></i> Swiss Prime Site</div>
+                    <div class="card-body">
+                        <p><strong>Résumé exécutif :</strong> Bénéfice net stable 164,2 MCHF; revalorisations (102 MCHF) compensent baisse loyers; diversification retail/asset management.</p>
+                        <p><strong>Performance opérationnelle :</strong> Taux occupation 96,0% (vacants 4,0%); revenus locatifs 225,5 MCHF (-2,8%); pipeline 1 037,3 MCHF (+392%).</p>
+                        <p><strong>Métriques financières :</strong> EBITDA 304,0 MCHF (+29,3%); FFO I 2,10 CHF/action (+3,4%); LTV 38,4%; rendement net 3,1%.</p>
+                        <p><strong>Évolution patrimoine :</strong> Valorisation 13 310,0 MCHF (+1,9%); EPRA NTA 98,01 CHF/action (-1,3%); discount rate 3,81%.</p>
+                        <p><strong>Guidance :</strong> Like-for-like +2,2%; focus bilan solide et diversification.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-info-circle"></i> Investis</div>
+                    <div class="card-body">
+                        <p><strong>Résumé exécutif :</strong> Bénéfice net -43,7% à 80,2 MCHF mais FFO stable; cession services pour focus résidentiel pur.</p>
+                        <p><strong>Performance opérationnelle :</strong> Taux occupation 98,6% (vacants 1,4%); revenus locatifs 38,8 MCHF; acquisitions nettes 128 MCHF.</p>
+                        <p><strong>Métriques financières :</strong> EBITDA avant reval. 24,4 MCHF (-7,4%); FFO 17,9 MCHF (-25,1%); LTV brut 30,1%; equity ratio 62,3%.</p>
+                        <p><strong>Évolution patrimoine :</strong> Valorisation 2 123,5 MCHF (+6,4%); rendement ~4%; NAV excl. taxes 121,69 CHF/action (+3,9%).</p>
+                        <p><strong>Guidance :</strong> Like-for-like +1,9%; dividendes stables; croissance via recentrage.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-info-circle"></i> SF Urban Properties</div>
+                    <div class="card-body">
+                        <p><strong>Résumé exécutif :</strong> Bénéfice net excl. reval. +14,0% à 7,3 MCHF; rotations actives et revalorisations like-for-like +2,23%.</p>
+                        <p><strong>Performance opérationnelle :</strong> Revenus locatifs 15,9 MCHF (+2,3%); acquisitions Zurich 13,8 MCHF; cessions 19,85 MCHF; avancée Herrliberg.</p>
+                        <p><strong>Métriques financières :</strong> EBIT excl. reval. 11,4 MCHF +2,7 MCHF dev.; net excl. reval. 7,3 MCHF; LTV ~30%.</p>
+                        <p><strong>Évolution patrimoine :</strong> Valorisation 800,7 MCHF (+4,6%); rendement brut 4,03%; discount rate 2,72%.</p>
+                        <p><strong>Guidance :</strong> Forecast maintenu; focus urban Zurich/Bâle; potentiel indexation.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-info-circle"></i> PSP Swiss Property</div>
+                    <div class="card-body">
+                        <p><strong>Résumé exécutif :</strong> Bénéfice net +24,3% à 194,3 MCHF; revalorisations malgré loyers stables (-1,3%).</p>
+                        <p><strong>Performance opérationnelle :</strong> Taux occupation 96,0% (vacants 4,0%); revenus locatifs 173,9 MCHF; pipeline 552,6 MCHF (+81,7%).</p>
+                        <p><strong>Métriques financières :</strong> EBITDA excl. reval. 148,8 MCHF (-2,3%); EPRA EPS 2,33 CHF (-5,3%); LTV ~35%; equity ratio 53,6%.</p>
+                        <p><strong>Évolution patrimoine :</strong> Valorisation 9 980,3 MCHF (+1,6%); rendement brut 3,7%; EPRA NRV 143,60 CHF/action (+0,8%).</p>
+                        <p><strong>Guidance :</strong> Like-for-like +1,2%; marge EBITDA >85%; ROE 7,2%.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-info-circle"></i> Züblin</div>
+                    <div class="card-body">
+                        <p><strong>Résumé exécutif :</strong> Bénéfice +568% à 8,7 MCHF (annuel proratisé); revalorisations positives et loyers en hausse.</p>
+                        <p><strong>Performance opérationnelle :</strong> Taux occupation 95,2% (vacants 4,8%); revenus locatifs 9,4 MCHF (+4,8%); focus optimisation.</p>
+                        <p><strong>Métriques financières :</strong> EBITDA 6,3 MCHF (stable); ROE 6,1%; LTV EPRA 31,0%; coût dette 1,4%.</p>
+                        <p><strong>Évolution patrimoine :</strong> Valorisation 235,6 MCHF (+4,7%); NIY 3,9%; EPRA NRV 48,59 CHF/action (+4,8%).</p>
+                        <p><strong>Guidance :</strong> Stabilité; vacants bas; equity ratio 59,3%.</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="prose max-w-none text-gray-600 dark:text-gray-300">
-            <h4 class="font-semibold text-gray-800 dark:text-white">Résumé Exécutif</h4>
-            <p>${company.summary}</p>
-            <h4 class="font-semibold text-gray-800 dark:text-white">Performance Opérationnelle</h4>
-            <p>${company.performance}</p>
-            <h4 class="font-semibold text-gray-800 dark:text-white">Métriques Financières Clés</h4>
-            <p>${company.financials}</p>
-            <h4 class="font-semibold text-gray-800 dark:text-white">Argumentaire d'Investissement</h4>
-            <p>${company.recommendation}</p>
+        <!-- Section 2: Analyse Comparative -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <h2 class="section-title text-center"><i class="fas fa-balance-scale"></i> 2. Analyse Comparative</h2>
+            </div>
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <p><strong><i class="fas fa-chart-bar"></i> Benchmarking vs pairs :</strong> Leaders en cash-flow : PSP et Swiss Prime Site (FFO >2 CHF/action, marges EBITDA >85%). Intershop et Zug Estate excellent en ROE excl. reval. (>6%) grâce à vacants bas. Mobimo et Allreal forts en pipelines (>600 MCHF), mais LTV élevés (43-45%). Warteck et Investis solides en bilan (LTV <45%). SF Urban et Züblin offrent yields plus hauts (4-5%). Moyenne secteur : vacants 3-5%, like-for-like +1-2%, LTV 35-40%, ROE 5-7%.</p>
+                        <p><strong><i class="fas fa-money-check-alt"></i> Multiples de valorisation :</strong> P/FFO moyen 15-20x (PSP ~18x, Swiss Prime ~16x; Züblin ~12x). Rendement dividende 3-4% (Intershop ~4%, Allreal ~3,5%). Prime/décote sur NAV : décote moyenne 10-20% (Warteck prime 21%, Zug décote 10%; SF Urban décote 15%). Favorise résidentiels purs vs. mixtes.</p>
+                        <p><strong><i class="fas fa-map-marker-alt"></i> Positionnement stratégique :</strong> PSP et Swiss Prime dominent par taille/diversification (Zurich/Geneva prime). Zug et SF Urban niches (hôtelier/urban) avec yields attractifs. Intershop et Mobimo forts développements mais exposition commerciale. Warteck diversifié cantonalement. Investis pur résidentiel post-cession. Züblin et Allreal opportunistes, limités par échelle.</p>
+                    </div>
+                </div>
+            </div>
         </div>
-    `;
 
-    document.querySelectorAll('.company-btn').forEach(btn => {
-        btn.classList.remove('active-company-btn');
-        if (btn.dataset.companyId === companyId) {
-            btn.classList.add('active-company-btn');
-        }
-    });
-}
+        <!-- Section 3: Recommandation d'Investissement -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <h2 class="section-title text-center"><i class="fas fa-thumbs-up"></i> 3. Recommandation d'Investissement</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-star"></i> Warteck Invest</div>
+                    <div class="card-body">
+                        <p><strong>Rating :</strong> <span class="badge rating-badge badge-buy">Buy</span></p>
+                        <p><strong>Target 12 mois :</strong> 2 500 CHF</p>
+                        <p><strong>Catalyseurs/Risques :</strong> Pipeline robuste, vacants bas; gearing élevé (88%).</p>
+                        <p><strong>Argumentaire :</strong> Solide cash-flow (EBITDA excl. reval. +1%), bilan acceptable, potentiel valeur via développements. Buy pour rendement et croissance modérée.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-star"></i> Zug Estate</div>
+                    <div class="card-body">
+                        <p><strong>Rating :</strong> <span class="badge rating-badge badge-strong-buy">Strong Buy</span></p>
+                        <p><strong>Target 12 mois :</strong> 2 500 CHF</p>
+                        <p><strong>Catalyseurs/Risques :</strong> Vacants minimaux, diversification; hausse taux dette.</p>
+                        <p><strong>Argumentaire :</strong> Cash-flow supérieur (FFO +10%), bilan solide (equity 56%), création valeur via yields. Strong Buy pour résilience et potentiel indexation.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-star"></i> Mobimo</div>
+                    <div class="card-body">
+                        <p><strong>Rating :</strong> <span class="badge rating-badge badge-hold">Hold</span></p>
+                        <p><strong>Target 12 mois :</strong> 350 CHF</p>
+                        <p><strong>Catalyseurs/Risques :</strong> Pipeline développement, croissance EPRA; vacants croissants, LTV élevé.</p>
+                        <p><strong>Argumentaire :</strong> Cash-flow correct mais volatil; bilan moyen. Hold en attendant exécution pipeline et stabilisation vacants.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-star"></i> Allreal</div>
+                    <div class="card-body">
+                        <p><strong>Rating :</strong> <span class="badge rating-badge badge-buy">Buy</span></p>
+                        <p><strong>Target 12 mois :</strong> 200 CHF</p>
+                        <p><strong>Catalyseurs/Risques :</strong> Volumes projets +, coût dette bas; baisse loyers.</p>
+                        <p><strong>Argumentaire :</strong> Génération valeur via réalisations, bilan amélioré. Buy pour potentiel upside et marge tierce stable.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-star"></i> Intershop</div>
+                    <div class="card-body">
+                        <p><strong>Rating :</strong> <span class="badge rating-badge badge-strong-buy">Strong Buy</span></p>
+                        <p><strong>Target 12 mois :</strong> 160 CHF</p>
+                        <p><strong>Catalyseurs/Risques :</strong> Reval. massives, gains cessions; exposition Zurich volatile.</p>
+                        <p><strong>Argumentaire :</strong> Fort cash-flow (ROE 6%), LTV bas (33%), création valeur via rotations. Strong Buy pour efficience et gains attendus.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-star"></i> Swiss Prime Site</div>
+                    <div class="card-body">
+                        <p><strong>Rating :</strong> <span class="badge rating-badge badge-hold">Hold</span></p>
+                        <p><strong>Target 12 mois :</strong> 100 CHF</p>
+                        <p><strong>Catalyseurs/Risques :</strong> Taille, diversification; baisse loyers, LTV montant.</p>
+                        <p><strong>Argumentaire :</strong> Cash-flow stable mais croissance faible; bilan solide. Hold pour stabilité et potentiel retail.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-star"></i> Investis</div>
+                    <div class="card-body">
+                        <p><strong>Rating :</strong> <span class="badge rating-badge badge-buy">Buy</span></p>
+                        <p><strong>Target 12 mois :</strong> 140 CHF</p>
+                        <p><strong>Catalyseurs/Risques :</strong> Recentré résidentiel, vacants bas; impact cession services.</p>
+                        <p><strong>Argumentaire :</strong> Bilan fort (LTV 30%), cash-flow résilient. Buy post-restructuration pour focus pur et croissance like-for-like.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-star"></i> SF Urban Properties</div>
+                    <div class="card-body">
+                        <p><strong>Rating :</strong> <span class="badge rating-badge badge-buy">Buy</span></p>
+                        <p><strong>Target 12 mois :</strong> 160 CHF</p>
+                        <p><strong>Catalyseurs/Risques :</strong> Acquisitions Zurich, reval. +2%; taille petite.</p>
+                        <p><strong>Argumentaire :</strong> Focus urban prime, cash-flow croissant. Buy pour potentiel appréciation et rotations stratégiques.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-star"></i> PSP Swiss Property</div>
+                    <div class="card-body">
+                        <p><strong>Rating :</strong> <span class="badge rating-badge badge-hold">Hold</span></p>
+                        <p><strong>Target 12 mois :</strong> 160 CHF</p>
+                        <p><strong>Catalyseurs/Risques :</strong> Marge EBITDA haute; loyers stables.</p>
+                        <p><strong>Argumentaire :</strong> Cash-flow élevé, bilan solide; Hold pour valorisation pleine et manque upside immédiat.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card company-card">
+                    <div class="card-header"><i class="fas fa-star"></i> Züblin</div>
+                    <div class="card-body">
+                        <p><strong>Rating :</strong> <span class="badge rating-badge badge-hold">Hold</span></p>
+                        <p><strong>Target 12 mois :</strong> 40 CHF</p>
+                        <p><strong>Catalyseurs/Risques :</strong> Vacants bas, coût dette bas; taille limitée.</p>
+                        <p><strong>Argumentaire :</strong> Cash-flow stable, bilan fort; Hold pour manque échelle et potentiel croissance modéré.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-function initCharts() {
-    updateComparisonChart('ltv');
-    createBubbleChart();
-    createMarketCapDonutChart();
-    updateCompanyRadarChart(companiesData[0].id);
-    createPayoutScatterChart();
-    createRevenueGrowthChart();
-}
+        <!-- Section 4: Tableau de Synthèse -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <h2 class="section-title text-center"><i class="fas fa-table"></i> 4. Tableau de Synthèse</h2>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Société</th>
+                                <th>Market Cap (MCHF)</th>
+                                <th>Revenus S1 (MCHF)</th>
+                                <th>FFO/action (CHF)</th>
+                                <th>Dividende (CHF)</th>
+                                <th>LTV (%)</th>
+                                <th>Rendement (%)</th>
+                                <th>NAV/action (CHF)</th>
+                                <th>Prime/Décote (%)</th>
+                                <th>Rating</th>
+                                <th>Target (CHF)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Warteck Invest</td>
+                                <td>625</td>
+                                <td>22.3</td>
+                                <td>~3.5</td>
+                                <td>70</td>
+                                <td>45.1</td>
+                                <td>4.4</td>
+                                <td>~100</td>
+                                <td>+21</td>
+                                <td>Buy</td>
+                                <td>2500</td>
+                            </tr>
+                            <tr>
+                                <td>Zug Estate</td>
+                                <td>1107</td>
+                                <td>35.9</td>
+                                <td>39.0</td>
+                                <td>~10</td>
+                                <td>35.3</td>
+                                <td>4.0</td>
+                                <td>2193</td>
+                                <td>-10</td>
+                                <td>Strong Buy</td>
+                                <td>2500</td>
+                            </tr>
+                            <tr>
+                                <td>Mobimo</td>
+                                <td>~2350</td>
+                                <td>62.5</td>
+                                <td>~5.0</td>
+                                <td>10.25</td>
+                                <td>43.2</td>
+                                <td>4.4</td>
+                                <td>297</td>
+                                <td>-5</td>
+                                <td>Hold</td>
+                                <td>350</td>
+                            </tr>
+                            <tr>
+                                <td>Allreal</td>
+                                <td>3075</td>
+                                <td>103.5</td>
+                                <td>3.79</td>
+                                <td>~7</td>
+                                <td>~45</td>
+                                <td>~4</td>
+                                <td>187</td>
+                                <td>+12</td>
+                                <td>Buy</td>
+                                <td>200</td>
+                            </tr>
+                            <tr>
+                                <td>Intershop</td>
+                                <td>~1300</td>
+                                <td>39.5</td>
+                                <td>~3.1</td>
+                                <td>5.50</td>
+                                <td>33.0</td>
+                                <td>5.2</td>
+                                <td>115</td>
+                                <td>-15</td>
+                                <td>Strong Buy</td>
+                                <td>160</td>
+                            </tr>
+                            <tr>
+                                <td>Swiss Prime Site</td>
+                                <td>~7700</td>
+                                <td>225.5</td>
+                                <td>2.10</td>
+                                <td>~3.5</td>
+                                <td>38.4</td>
+                                <td>3.1</td>
+                                <td>98</td>
+                                <td>-5</td>
+                                <td>Hold</td>
+                                <td>100</td>
+                            </tr>
+                            <tr>
+                                <td>Investis</td>
+                                <td>1626</td>
+                                <td>38.8</td>
+                                <td>~1.4</td>
+                                <td>~2.5</td>
+                                <td>30.1</td>
+                                <td>~4</td>
+                                <td>122</td>
+                                <td>+10</td>
+                                <td>Buy</td>
+                                <td>140</td>
+                            </tr>
+                            <tr>
+                                <td>SF Urban Properties</td>
+                                <td>~500</td>
+                                <td>15.9</td>
+                                <td>2.17</td>
+                                <td>~3</td>
+                                <td>~30</td>
+                                <td>4.0</td>
+                                <td>~100</td>
+                                <td>-15</td>
+                                <td>Buy</td>
+                                <td>160</td>
+                            </tr>
+                            <tr>
+                                <td>PSP Swiss Property</td>
+                                <td>~6700</td>
+                                <td>173.9</td>
+                                <td>2.33</td>
+                                <td>3.90</td>
+                                <td>35.0</td>
+                                <td>3.7</td>
+                                <td>144</td>
+                                <td>+13</td>
+                                <td>Hold</td>
+                                <td>160</td>
+                            </tr>
+                            <tr>
+                                <td>Züblin</td>
+                                <td>~110</td>
+                                <td>4.7 (prorata)</td>
+                                <td>~1.3</td>
+                                <td>~1</td>
+                                <td>31.0</td>
+                                <td>3.9</td>
+                                <td>49</td>
+                                <td>+27</td>
+                                <td>Hold</td>
+                                <td>40</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-function updateComparisonChart(metric) {
-    const ctx = document.getElementById('comparisonChart').getContext('2d');
-    const colors = getChartColors();
-    const metricConfig = {
-        ltv: { label: 'LTV (%)', data: companiesData.map(c => c.ltv), backgroundColor: 'rgba(59, 130, 246, 0.7)', borderColor: 'rgba(59, 130, 246, 1)' },
-        yield: { label: 'Rendement (%)', data: companiesData.map(c => c.yield), backgroundColor: 'rgba(16, 185, 129, 0.7)', borderColor: 'rgba(16, 185, 129, 1)' },
-        premiumDiscount: { label: 'Prime/Décote sur NAV (%)', data: companiesData.map(c => c.premiumDiscount), backgroundColor: 'rgba(245, 158, 11, 0.7)', borderColor: 'rgba(245, 158, 11, 1)' }
-    };
-    const selectedConfig = metricConfig[metric];
-    if (chartInstances.comparison) chartInstances.comparison.destroy();
-    chartInstances.comparison = new Chart(ctx, {
-        type: 'bar',
-        data: { labels: companiesData.map(c => c.name), datasets: [{ label: selectedConfig.label, data: selectedConfig.data, backgroundColor: selectedConfig.backgroundColor, borderColor: selectedConfig.borderColor, borderWidth: 1, borderRadius: 4 }] },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            scales: {
-                y: { beginAtZero: false, title: { display: true, text: selectedConfig.label, color: colors.labels }, grid: { color: colors.grid }, ticks: { color: colors.ticks } },
-                x: { ticks: { maxRotation: 45, minRotation: 45, color: colors.ticks }, grid: { display: false } }
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: { backgroundColor: colors.tooltipBg, titleColor: colors.tooltipText, bodyColor: colors.tooltipText, titleFont: { size: 14 }, bodyFont: { size: 12 }, padding: 10, cornerRadius: 4, displayColors: false, callbacks: { label: (c) => `${c.dataset.label}: ${c.raw ? c.raw.toFixed(1) : 'N/A'}%` } }
-            }
-        }
-    });
-}
-
-function createBubbleChart() {
-    const ctx = document.getElementById('bubbleChart').getContext('2d');
-    const colors = getChartColors();
-    const data = companiesData.filter(c => c.ltv !== null && c.premiumDiscount !== null).map(c => ({ x: c.ltv, y: c.premiumDiscount, r: Math.sqrt(c.marketCap) / 8, name: c.name }));
-    if (chartInstances.bubble) chartInstances.bubble.destroy();
-    chartInstances.bubble = new Chart(ctx, {
-        type: 'bubble',
-        data: { datasets: [{ label: 'Sociétés', data: data, backgroundColor: 'rgba(239, 68, 68, 0.6)', borderColor: 'rgba(239, 68, 68, 1)' }] },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            scales: {
-                x: { title: { display: true, text: 'LTV (%) → Risque Financier', color: colors.labels }, grid: { color: colors.grid }, ticks: { color: colors.ticks } },
-                y: { title: { display: true, text: 'Prime/Décote sur NAV (%) → Valorisation', color: colors.labels }, grid: { color: colors.grid }, ticks: { color: colors.ticks } }
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: { backgroundColor: colors.tooltipBg, titleColor: colors.tooltipText, bodyColor: colors.tooltipText, titleFont: { size: 14 }, bodyFont: { size: 12 }, padding: 10, cornerRadius: 4, displayColors: false, callbacks: { label: (c) => `${c.raw.name}: LTV ${c.raw.x.toFixed(1)}%, P/NAV ${c.raw.y.toFixed(1)}%` } }
-            }
-        }
-    });
-}
-
-function createMarketCapDonutChart() {
-    const ctx = document.getElementById('marketCapDonutChart').getContext('2d');
-    const colors = getChartColors();
-    if (chartInstances.marketCap) chartInstances.marketCap.destroy();
-    chartInstances.marketCap = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: companiesData.map(c => c.name),
-            datasets: [{ label: 'Capitalisation Boursière (M CHF)', data: companiesData.map(c => c.marketCap), backgroundColor: ['#0d47a1', '#1565c0', '#1976d2', '#1e88e5', '#2196f3', '#42a5f5', '#64b5f6', '#90caf9', '#bbdefb', '#e3f2fd'], borderColor: document.documentElement.classList.contains('dark') ? '#0f172a' : '#f8f9fa', borderWidth: 2 }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: { backgroundColor: colors.tooltipBg, titleColor: colors.tooltipText, bodyColor: colors.tooltipText, titleFont: { size: 14 }, bodyFont: { size: 12 }, padding: 10, cornerRadius: 4, callbacks: { label: (c) => { const t = c.chart.data.datasets[0].data.reduce((a, b) => a + b, 0); return `${c.label}: ${c.raw.toLocaleString()} M CHF (${((c.raw / t) * 100).toFixed(1)}%)`; } } }
-            }
-        }
-    });
-}
-
-function updateCompanyRadarChart(companyId) {
-    const company = companiesData.find(c => c.id === companyId);
-    if (!company) return;
-    const ctx = document.getElementById('companyRadarChart').getContext('2d');
-    const colors = getChartColors();
-    const normalize = (val, min, max) => (val - min) / (max - min);
-    const ltvValues = companiesData.map(c => c.ltv).filter(v => v !== null);
-    const yieldValues = companiesData.map(c => c.yield).filter(v => v !== null);
-    const premiumValues = companiesData.map(c => c.premiumDiscount).filter(v => v !== null);
-    const data = {
-        labels: ['Valorisation (Prime/Décote)', 'Rendement', 'Levier (LTV)', 'Qualité (Low LTV)'],
-        datasets: [{ label: company.name, data: [normalize(company.premiumDiscount, Math.min(...premiumValues), Math.max(...premiumValues)), normalize(company.yield, Math.min(...yieldValues), Math.max(...yieldValues)), normalize(company.ltv, Math.min(...ltvValues), Math.max(...ltvValues)), 1 - normalize(company.ltv, Math.min(...ltvValues), Math.max(...ltvValues)),], fill: true, backgroundColor: 'rgba(30, 58, 138, 0.2)', borderColor: 'rgb(30, 58, 138)', pointBackgroundColor: 'rgb(30, 58, 138)', pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: 'rgb(30, 58, 138)' }]
-    };
-    if (chartInstances.radar) chartInstances.radar.destroy();
-    chartInstances.radar = new Chart(ctx, {
-        type: 'radar', data: data,
-        options: {
-            responsive: true, maintainAspectRatio: false, elements: { line: { borderWidth: 3 } },
-            scales: { r: { angleLines: { color: colors.grid }, grid: { color: colors.grid }, pointLabels: { font: { size: 12 }, color: colors.labels }, suggestedMin: 0, suggestedMax: 1, ticks: { display: false } } },
-            plugins: { legend: { position: 'top', labels: { color: colors.labels } }, tooltip: { enabled: false } }
-        }
-    });
-}
-
-function createPayoutScatterChart() {
-    const ctx = document.getElementById('payoutScatterChart').getContext('2d');
-    const colors = getChartColors();
-    const data = companiesData.filter(c => c.ffoPerShare !== null && c.dividend !== null).map(c => ({ x: c.ffoPerShare, y: c.dividend, name: c.name }));
-    if (chartInstances.payout) chartInstances.payout.destroy();
-    chartInstances.payout = new Chart(ctx, {
-        type: 'scatter',
-        data: {
-            datasets: [{
-                label: 'FFO vs. Dividende', data: data, backgroundColor: 'rgba(139, 92, 246, 0.7)',
-                pointRadius: 8, pointHoverRadius: 12
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            scales: {
-                x: { title: { display: true, text: 'FFO par Action (CHF)', color: colors.labels }, grid: { color: colors.grid }, ticks: { color: colors.ticks } },
-                y: { title: { display: true, text: 'Dividende par Action (CHF)', color: colors.labels }, grid: { color: colors.grid }, ticks: { color: colors.ticks } }
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: { backgroundColor: colors.tooltipBg, titleColor: colors.tooltipText, bodyColor: colors.tooltipText, titleFont: { size: 14 }, bodyFont: { size: 12 }, padding: 10, cornerRadius: 4, displayColors: false, callbacks: { label: (c) => `${c.raw.name}: FFO ${c.raw.x.toFixed(2)}, Div ${c.raw.y.toFixed(2)}` } }
-            }
-        }
-    });
-}
-
-function createRevenueGrowthChart() {
-    const ctx = document.getElementById('revenueGrowthChart').getContext('2d');
-    const colors = getChartColors();
-    const sortedData = [...companiesData].sort((a, b) => b.revenueGrowth - a.revenueGrowth);
-    if (chartInstances.revenue) chartInstances.revenue.destroy();
-    chartInstances.revenue = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: sortedData.map(c => c.name),
-            datasets: [{
-                label: 'Croissance Revenus Locatifs LFL (%)',
-                data: sortedData.map(c => c.revenueGrowth),
-                backgroundColor: sortedData.map(c => c.revenueGrowth > 0 ? 'rgba(22, 163, 74, 0.7)' : 'rgba(220, 38, 38, 0.7)'),
-                borderColor: sortedData.map(c => c.revenueGrowth > 0 ? 'rgba(22, 163, 74, 1)' : 'rgba(220, 38, 38, 1)'),
-                borderWidth: 1
-            }]
-        },
-        options: {
-            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-            scales: {
-                x: { title: { display: true, text: 'Croissance (%)', color: colors.labels }, grid: { color: colors.grid }, ticks: { color: colors.ticks } },
-                y: { grid: { display: false }, ticks: { color: colors.ticks } }
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: { backgroundColor: colors.tooltipBg, titleColor: colors.tooltipText, bodyColor: colors.tooltipText, titleFont: { size: 14 }, bodyFont: { size: 12 }, padding: 10, cornerRadius: 4, displayColors: false, callbacks: { label: (c) => `Croissance: ${c.raw.toFixed(1)}%` } }
-            }
-        }
-    });
-}
-
-</script>
+        <div class="footer">
+            <p>Analyse réalisée par Grok - xAI | Date : Août 2025 | Avertissement : Non-conseil financier</p>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+```
